@@ -54,15 +54,15 @@ test('happy path enforces encrypt compute verify authorize decrypt lifecycle', a
   const logger = new MemoryLogger();
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore(), logger });
 
-  await service.SubmitConfidentialIntent({ ...buildRequest(), action: 'settle-payment' });
-  const result = await service.ExecuteConfidentialCompute(buildRequest());
-  const verification = await service.VerifyConfidentialResult({
+  await service.submitConfidentialIntent({ ...buildRequest(), action: 'settle-payment' });
+  const result = await service.executeConfidentialCompute(buildRequest());
+  const verification = await service.verifyConfidentialResult({
     requestId: result.requestId,
     policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
     actorRef: 'actor:verifier'
   });
-  const authorization = await service.RequestDecryption({ requestId: result.requestId, actorRef: 'actor:approver' });
-  const plaintext = await service.PerformDecryption({ requestId: result.requestId });
+  const authorization = await service.requestDecryption({ requestId: result.requestId, actorRef: 'actor:approver' });
+  const plaintext = await service.performDecryption({ requestId: result.requestId });
 
   assert.equal(verification.decision, 'PASS');
   assert.equal(authorization.granted, true);
@@ -71,25 +71,25 @@ test('happy path enforces encrypt compute verify authorize decrypt lifecycle', a
 
 test('verification failure blocks decryption', async () => {
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
-  const result = await service.ExecuteConfidentialCompute(buildRequest());
-  const verification = await service.VerifyConfidentialResult({
+  const result = await service.executeConfidentialCompute(buildRequest());
+  const verification = await service.verifyConfidentialResult({
     requestId: result.requestId,
     policy: { policyVersion: 'wrong-version', policyHash: 'wrong-hash' },
     actorRef: 'actor:verifier'
   });
-  const authorization = await service.RequestDecryption({ requestId: result.requestId, actorRef: 'actor:approver' });
+  const authorization = await service.requestDecryption({ requestId: result.requestId, actorRef: 'actor:approver' });
 
   assert.equal(verification.decision, 'FAIL');
   assert.equal(verification.reasonCode, FailureReasonCode.POLICY_MISMATCH);
   assert.equal(authorization.granted, false);
-  await assert.rejects(() => service.PerformDecryption({ requestId: result.requestId }), (error) => error.code === FailureReasonCode.DECRYPT_NOT_AUTHORIZED);
+  await assert.rejects(() => service.performDecryption({ requestId: result.requestId }), (error) => error.code === FailureReasonCode.DECRYPT_NOT_AUTHORIZED);
 });
 
 test('missing linkage fails closed', async () => {
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
 
   await assert.rejects(
-    () => service.ExecuteConfidentialCompute(buildRequest('inco', { mandateId: '' })),
+    () => service.executeConfidentialCompute(buildRequest('inco', { mandateId: '' })),
     /mandateId is required/
   );
 });
@@ -98,14 +98,14 @@ test('logs redact plaintext and sensitive values', async () => {
   const logger = new MemoryLogger();
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore(), logger });
 
-  const result = await service.ExecuteConfidentialCompute(buildRequest());
-  await service.VerifyConfidentialResult({
+  const result = await service.executeConfidentialCompute(buildRequest());
+  await service.verifyConfidentialResult({
     requestId: result.requestId,
     policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
     actorRef: 'actor:verifier'
   });
-  await service.RequestDecryption({ requestId: result.requestId, actorRef: 'actor:approver' });
-  await service.PerformDecryption({ requestId: result.requestId });
+  await service.requestDecryption({ requestId: result.requestId, actorRef: 'actor:approver' });
+  await service.performDecryption({ requestId: result.requestId });
 
   const serialized = JSON.stringify(logger.entries);
   assert.equal(serialized.includes('do-not-log'), false);
@@ -118,8 +118,8 @@ test('same logical request can route through different providers with normalized
 
   for (const provider of providers) {
     const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
-    const result = await service.ExecuteConfidentialCompute(buildRequest(provider));
-    const verification = await service.VerifyConfidentialResult({
+    const result = await service.executeConfidentialCompute(buildRequest(provider));
+    const verification = await service.verifyConfidentialResult({
       requestId: result.requestId,
       policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
       actorRef: 'actor:verifier'
@@ -139,8 +139,8 @@ test('same logical request can route through different providers with normalized
 test('provenance records are persisted and queryable by intent and correlation identifiers', async () => {
   const store = new InMemoryConfidentialStore();
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store });
-  const result = await service.ExecuteConfidentialCompute(buildRequest('tee', { intentId: 'intent-xyz', correlationId: 'corr-xyz' }));
-  await service.VerifyConfidentialResult({
+  const result = await service.executeConfidentialCompute(buildRequest('tee', { intentId: 'intent-xyz', correlationId: 'corr-xyz' }));
+  await service.verifyConfidentialResult({
     requestId: result.requestId,
     policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
     actorRef: 'actor:verifier'
@@ -157,16 +157,16 @@ test('provenance records are persisted and queryable by intent and correlation i
 test('verification outcomes are immutable', async () => {
   const store = new InMemoryConfidentialStore();
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store });
-  const result = await service.ExecuteConfidentialCompute(buildRequest('zk', { correlationId: 'corr-immutable' }));
+  const result = await service.executeConfidentialCompute(buildRequest('zk', { correlationId: 'corr-immutable' }));
 
-  await service.VerifyConfidentialResult({
+  await service.verifyConfidentialResult({
     requestId: result.requestId,
     policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
     actorRef: 'actor:verifier'
   });
 
   await assert.rejects(
-    () => service.VerifyConfidentialResult({
+    () => service.verifyConfidentialResult({
       requestId: result.requestId,
       policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
       actorRef: 'actor:verifier-2'
@@ -177,10 +177,10 @@ test('verification outcomes are immutable', async () => {
 
 test('decryption requires verification record and authorization', async () => {
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
-  const result = await service.ExecuteConfidentialCompute(buildRequest('arcium', { correlationId: 'corr-guard' }));
+  const result = await service.executeConfidentialCompute(buildRequest('arcium', { correlationId: 'corr-guard' }));
 
   await assert.rejects(
-    () => service.PerformDecryption({ requestId: result.requestId }),
+    () => service.performDecryption({ requestId: result.requestId }),
     (error) => error.code === FailureReasonCode.DECRYPT_NOT_AUTHORIZED
   );
 });

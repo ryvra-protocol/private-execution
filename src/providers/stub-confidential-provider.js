@@ -73,7 +73,9 @@ export class StubConfidentialProvider extends ConfidentialComputeProvider {
 
   async decrypt(grant, ciphertext) {
     if (!grant.granted) {
-      throw new Error(FailureReasonCode.DECRYPT_NOT_AUTHORIZED);
+      const error = new Error('Decryption is not authorized');
+      error.code = FailureReasonCode.DECRYPT_NOT_AUTHORIZED;
+      throw error;
     }
 
     if (ciphertext.startsWith('result:')) {

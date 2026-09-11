@@ -14,6 +14,7 @@ CREATE TABLE confidential_jobs (
 CREATE INDEX idx_confidential_jobs_intent_id ON confidential_jobs (intent_id);
 CREATE INDEX idx_confidential_jobs_mandate_id ON confidential_jobs (mandate_id);
 CREATE INDEX idx_confidential_jobs_authorization_id ON confidential_jobs (authorization_id);
+CREATE INDEX idx_confidential_jobs_correlation_id ON confidential_jobs (correlation_id);
 CREATE INDEX idx_confidential_jobs_provider ON confidential_jobs (provider);
 CREATE INDEX idx_confidential_jobs_created_at ON confidential_jobs (created_at);
 
@@ -80,7 +81,8 @@ CREATE TABLE decrypt_authorizations (
   reason TEXT NOT NULL,
   audit_ref TEXT NOT NULL,
   actor_ref TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (confidential_job_id)
 );
 
 CREATE INDEX idx_decrypt_authorizations_authorization_id ON decrypt_authorizations (authorization_id);

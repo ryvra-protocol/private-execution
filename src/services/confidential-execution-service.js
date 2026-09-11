@@ -52,14 +52,14 @@ export class ConfidentialExecutionService {
     return provider;
   }
 
-  async SubmitConfidentialIntent(intentLike) {
+  async submitConfidentialIntent(intentLike) {
     const intent = createConfidentialIntent(intentLike);
     this.store.saveIntent(intent);
     this.logger.info('confidential.intent.submitted', intent);
     return intent;
   }
 
-  async ExecuteConfidentialCompute(requestLike) {
+  async executeConfidentialCompute(requestLike) {
     const request = createConfidentialExecutionRequest(requestLike);
     const authority = verifyAuthorityLinkage(request);
     const provider = this.getProvider(request.provider);
@@ -120,15 +120,17 @@ export class ConfidentialExecutionService {
       commitmentHash: result.commitmentHash
     });
 
-    return Object.freeze({ ...result, ciphertext: computed.ciphertext, authority });
+    return Object.freeze({ ...result, ciphertext: computed.ciphertext });
   }
 
-  async VerifyConfidentialResult({ requestId, policy, actorRef }) {
+  async verifyConfidentialResult({ requestId, policy, actorRef }) {
     const request = this.store.getRequest(requestId);
     const result = this.store.getResult(requestId);
 
     if (!request || !result) {
-      throw new Error(`Unknown request: ${requestId}`);
+      const error = new Error(`Unknown request: ${requestId}`);
+      error.code = FailureReasonCode.UNKNOWN_REQUEST;
+      throw error;
     }
 
     verifyAuthorityLinkage(request);
@@ -180,7 +182,7 @@ export class ConfidentialExecutionService {
     return verification;
   }
 
-  async RequestDecryption({ requestId, actorRef }) {
+  async requestDecryption({ requestId, actorRef }) {
     const request = this.store.getRequest(requestId);
     const result = this.store.getResult(requestId);
     const verification = this.store.getVerification(requestId);
@@ -232,7 +234,7 @@ export class ConfidentialExecutionService {
     return authorization;
   }
 
-  async PerformDecryption({ requestId }) {
+  async performDecryption({ requestId }) {
     const request = this.store.getRequest(requestId);
     const verification = this.store.getVerification(requestId);
     const authorization = this.store.getDecryptionAuthorization(requestId);
