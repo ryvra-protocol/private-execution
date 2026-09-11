@@ -12,6 +12,14 @@ function requiredString(value, field) {
   return value.trim();
 }
 
+function requiredValue(value, field) {
+  if (value === undefined) {
+    throw new Error(`${field} is required`);
+  }
+
+  return value;
+}
+
 export function validateAuthorityLinkage(value) {
   for (const field of REQUIRED_AUTHORITY_FIELDS) {
     requiredString(value?.[field], field);
@@ -47,7 +55,7 @@ export function createConfidentialExecutionRequest(value) {
     inputRef: requiredString(value.inputRef, 'inputRef'),
     operation: requiredString(value.operation, 'operation'),
     actorRef: requiredString(value.actorRef, 'actorRef'),
-    payload: value.payload,
+    payload: requiredValue(value.payload, 'payload'),
     createdAt: value.createdAt ?? nowIso(),
     metadata: Object.freeze({ ...(value.metadata ?? {}) })
   });

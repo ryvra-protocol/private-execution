@@ -53,11 +53,12 @@ export class StubConfidentialProvider extends ConfidentialComputeProvider {
   }
 
   async verify(resultCommitment, proof, policy) {
+    const commitmentAligned = proof?.commitmentHash === resultCommitment;
     const policyAligned = proof?.policyHash === policy.policyHash && proof?.policyVersion === policy.policyVersion;
     return {
-      pass: Boolean(policyAligned),
-      reason: policyAligned ? 'Provider verification succeeded' : 'Policy binding mismatch',
-      reasonCode: policyAligned ? null : FailureReasonCode.POLICY_MISMATCH
+      pass: Boolean(commitmentAligned && policyAligned),
+      reason: commitmentAligned && policyAligned ? 'Provider verification succeeded' : 'Verification artifacts did not satisfy policy binding',
+      reasonCode: commitmentAligned && policyAligned ? null : FailureReasonCode.VERIFICATION_FAILED
     };
   }
 

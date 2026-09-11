@@ -13,11 +13,17 @@ export class InMemoryConfidentialStore {
   }
 
   saveIntent(intent) {
+    if (this.intents.has(intent.id)) {
+      throw new Error('Intent records are immutable');
+    }
     this.intents.set(intent.id, intent);
     return intent;
   }
 
   saveRequest(request) {
+    if (this.requests.has(request.id)) {
+      throw new Error('Request records are immutable');
+    }
     this.requests.set(request.id, request);
     return request;
   }
@@ -50,16 +56,25 @@ export class InMemoryConfidentialStore {
   }
 
   saveInput(inputRecord) {
+    if (this.inputs.has(inputRecord.id)) {
+      throw new Error('Input records are immutable');
+    }
     this.inputs.set(inputRecord.id, Object.freeze({ createdAt: nowIso(), ...inputRecord }));
     return this.inputs.get(inputRecord.id);
   }
 
   saveJob(jobRecord) {
+    if (this.jobs.has(jobRecord.id)) {
+      throw new Error('Job records are immutable');
+    }
     this.jobs.set(jobRecord.id, Object.freeze({ createdAt: nowIso(), ...jobRecord }));
     return this.jobs.get(jobRecord.id);
   }
 
   saveResult(result) {
+    if (this.results.has(result.confidentialJobId)) {
+      throw new Error('Result records are immutable');
+    }
     this.results.set(result.confidentialJobId, result);
     return result;
   }
@@ -85,6 +100,9 @@ export class InMemoryConfidentialStore {
   }
 
   saveProviderAttestation(record) {
+    if (this.providerAttestations.has(record.confidentialJobId)) {
+      throw new Error('Provider attestations are immutable');
+    }
     this.providerAttestations.set(record.confidentialJobId, Object.freeze({ createdAt: nowIso(), ...record }));
     return this.providerAttestations.get(record.confidentialJobId);
   }

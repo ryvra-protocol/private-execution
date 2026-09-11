@@ -181,7 +181,13 @@ export class ConfidentialExecutionService {
     const provider = this.getProvider(request.provider);
     const providerResult = await provider.verify(
       result.commitmentHash,
-      { proofRef: result.proofRef, attestationRef: result.attestationRef, policyHash: request.policyHash, policyVersion: request.policyVersion },
+      {
+        commitmentHash: result.commitmentHash,
+        proofRef: result.proofRef,
+        attestationRef: result.attestationRef,
+        policyHash: request.policyHash,
+        policyVersion: request.policyVersion
+      },
       validatedPolicy
     );
 
@@ -211,7 +217,13 @@ export class ConfidentialExecutionService {
     const result = this.store.getResult(requestId);
     const verification = this.store.getVerification(requestId);
 
-    if (!request || !result || !verification) {
+    if (!request || !result) {
+      const error = new Error(`Unknown request: ${requestId}`);
+      error.code = FailureReasonCode.UNKNOWN_REQUEST;
+      throw error;
+    }
+
+    if (!verification) {
       const error = new Error('Verification record is required before decryption');
       error.code = FailureReasonCode.DECRYPT_NOT_AUTHORIZED;
       throw error;
@@ -260,11 +272,17 @@ export class ConfidentialExecutionService {
 
   async performDecryption({ requestId }) {
     const request = this.store.getRequest(requestId);
+    const result = this.store.getResult(requestId);
     const verification = this.store.getVerification(requestId);
     const authorization = this.store.getDecryptionAuthorization(requestId);
-    const result = this.store.getResult(requestId);
 
-    if (!request || !result || !verification || !authorization) {
+    if (!request || !result) {
+      const error = new Error(`Unknown request: ${requestId}`);
+      error.code = FailureReasonCode.UNKNOWN_REQUEST;
+      throw error;
+    }
+
+    if (!verification || !authorization) {
       const error = new Error('Verification record and authorization are required');
       error.code = FailureReasonCode.DECRYPT_NOT_AUTHORIZED;
       throw error;

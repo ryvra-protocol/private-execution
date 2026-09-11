@@ -117,6 +117,15 @@ test('missing linkage fails closed', async () => {
   );
 });
 
+test('missing payload fails closed during execution', async () => {
+  const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
+
+  await assert.rejects(
+    () => service.executeConfidentialCompute(buildRequest('inco', { payload: undefined })),
+    /payload is required/
+  );
+});
+
 test('logs redact plaintext and sensitive values', async () => {
   const logger = new MemoryLogger();
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore(), logger });
@@ -221,5 +230,14 @@ test('decryption requires authorization even after verification succeeds', async
   await assert.rejects(
     () => service.performDecryption({ requestId: result.requestId }),
     (error) => error.code === FailureReasonCode.DECRYPT_NOT_AUTHORIZED
+  );
+});
+
+test('unknown request fails closed during decryption', async () => {
+  const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
+
+  await assert.rejects(
+    () => service.performDecryption({ requestId: 'missing-request' }),
+    (error) => error.code === FailureReasonCode.UNKNOWN_REQUEST
   );
 });
