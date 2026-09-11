@@ -91,7 +91,8 @@ CREATE TABLE decrypt_authorizations (
   audit_ref TEXT NOT NULL,
   actor_ref TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (confidential_job_id)
+  UNIQUE (confidential_job_id),
+  CHECK ((decision = 'GRANT' AND granted = TRUE) OR (decision = 'DENY' AND granted = FALSE))
 );
 
 CREATE INDEX idx_decrypt_authorizations_authorization_id ON decrypt_authorizations (authorization_id);

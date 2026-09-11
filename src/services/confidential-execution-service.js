@@ -164,12 +164,12 @@ export class ConfidentialExecutionService {
         provider: request.provider,
         decision: 'FAIL',
         reasonCode: FailureReasonCode.POLICY_MISMATCH,
-        reason: 'Policy binding mismatch',
+        reason: `Policy binding mismatch: expected ${request.policyVersion}/${request.policyHash} but received ${validatedPolicy.policyVersion}/${validatedPolicy.policyHash}`,
         commitmentHash: result.commitmentHash,
         proofRef: result.proofRef,
         attestationRef: result.attestationRef,
-        policyVersion: validatedPolicy.policyVersion,
-        policyHash: validatedPolicy.policyHash,
+        policyVersion: request.policyVersion,
+        policyHash: request.policyHash,
         verifier: 'service',
         actorRef
       });

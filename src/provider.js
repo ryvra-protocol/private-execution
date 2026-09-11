@@ -34,6 +34,13 @@ export function assertProviderContract(provider) {
     if (typeof provider?.[method] !== 'function') {
       throw new Error(`Provider missing method: ${method}`);
     }
+
+    if (
+      method !== 'getCapabilities' &&
+      provider[method] === ConfidentialComputeProvider.prototype[method]
+    ) {
+      throw new Error(`Provider must implement method: ${method}`);
+    }
   }
 
   return true;
