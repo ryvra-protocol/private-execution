@@ -1,0 +1,21 @@
+{
+  "name": "private-execution",
+  "version": "1.0.0",
+  "description": "Provider-agnostic confidential compute abstraction for Ryvra services.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://localhost:26831/ryvra-protocol/private-execution"
+  },
+  "keywords": [
+    "confidential-compute",
+    "privacy",
+    "attestation"
+  ],
+  "author": "",
+  "license": "Apache-2.0"
+}
