@@ -7,6 +7,7 @@ CREATE TABLE confidential_jobs (
   provider TEXT NOT NULL,
   provider_job_ref TEXT NOT NULL,
   operation TEXT NOT NULL,
+  status TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

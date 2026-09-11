@@ -76,7 +76,7 @@ export class ConfidentialExecutionService {
     this.store.saveRequest(request);
     this.store.saveInput({
       id: randomUUID(),
-      requestId: request.id,
+      confidentialJobId: request.id,
       inputRef: request.inputRef,
       ciphertextRef: encrypted.ciphertext,
       inputHash: encrypted.metadata.inputHash
@@ -94,20 +94,21 @@ export class ConfidentialExecutionService {
     });
     this.store.saveProviderAttestation({
       id: randomUUID(),
-      requestId: request.id,
+      confidentialJobId: request.id,
       provider: request.provider,
       proofRef: computed.proofRef,
       attestationRef: computed.attestationRef
     });
 
     const result = createConfidentialExecutionResult({
+      confidentialJobId: request.id,
       requestId: request.id,
       provider: request.provider,
       jobRef: computed.jobRef,
       commitmentHash: computed.resultCommitment,
+      resultCiphertextRef: computed.ciphertext,
       proofRef: computed.proofRef,
       attestationRef: computed.attestationRef,
-      resultCiphertext: computed.ciphertext,
       metadata: { status: ExecutionStatus.EXECUTED }
     });
 
@@ -133,6 +134,7 @@ export class ConfidentialExecutionService {
     verifyAuthorityLinkage(request);
     if (policy.policyHash !== request.policyHash || policy.policyVersion !== request.policyVersion) {
       const verification = createVerificationResult({
+        confidentialJobId: requestId,
         requestId,
         provider: request.provider,
         decision: 'FAIL',
@@ -158,6 +160,7 @@ export class ConfidentialExecutionService {
     );
 
     const verification = createVerificationResult({
+      confidentialJobId: requestId,
       requestId,
       provider: request.provider,
       decision: providerResult.pass ? 'PASS' : 'FAIL',
@@ -190,8 +193,10 @@ export class ConfidentialExecutionService {
 
     if (verification.decision !== 'PASS') {
       const denied = createDecryptionAuthorization({
+        confidentialJobId: requestId,
         requestId,
         verificationId: verification.id,
+        authorizationId: request.authorizationId,
         granted: false,
         auditRef: `audit-${requestId}`,
         actorRef,
@@ -211,8 +216,10 @@ export class ConfidentialExecutionService {
     });
 
     const authorization = createDecryptionAuthorization({
+      confidentialJobId: requestId,
       requestId,
       verificationId: verification.id,
+      authorizationId: request.authorizationId,
       granted: decision.granted,
       auditRef: decision.auditRef,
       actorRef,
@@ -244,7 +251,7 @@ export class ConfidentialExecutionService {
     }
 
     const provider = this.getProvider(request.provider);
-    const plaintext = await provider.decrypt(authorization, `result:${request.provider}:${Buffer.from(result.commitmentHash).toString('base64url')}`);
+    const plaintext = await provider.decrypt(authorization, result.resultCiphertextRef);
     this.logger.info('confidential.decrypt.performed', {
       requestId,
       provider: request.provider,

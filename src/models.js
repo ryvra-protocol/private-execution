@@ -56,10 +56,12 @@ export function createConfidentialExecutionRequest(value) {
 export function createConfidentialExecutionResult(value) {
   return Object.freeze({
     id: value.id ?? randomUUID(),
-    requestId: requiredString(value.requestId, 'requestId'),
+    confidentialJobId: requiredString(value.confidentialJobId ?? value.requestId, 'confidentialJobId'),
+    requestId: requiredString(value.requestId ?? value.confidentialJobId, 'requestId'),
     provider: requiredString(value.provider, 'provider'),
     jobRef: requiredString(value.jobRef, 'jobRef'),
     commitmentHash: requiredString(value.commitmentHash, 'commitmentHash'),
+    resultCiphertextRef: requiredString(value.resultCiphertextRef, 'resultCiphertextRef'),
     proofRef: requiredString(value.proofRef, 'proofRef'),
     attestationRef: requiredString(value.attestationRef, 'attestationRef'),
     verified: Boolean(value.verified),
@@ -71,7 +73,8 @@ export function createConfidentialExecutionResult(value) {
 export function createVerificationResult(value) {
   return Object.freeze({
     id: value.id ?? randomUUID(),
-    requestId: requiredString(value.requestId, 'requestId'),
+    requestId: requiredString(value.requestId ?? value.confidentialJobId, 'requestId'),
+    confidentialJobId: requiredString(value.confidentialJobId ?? value.requestId, 'confidentialJobId'),
     provider: requiredString(value.provider, 'provider'),
     decision: value.decision === 'PASS' ? 'PASS' : 'FAIL',
     reasonCode: value.reasonCode ?? (value.decision === 'PASS' ? null : FailureReasonCode.VERIFICATION_FAILED),
@@ -90,9 +93,12 @@ export function createVerificationResult(value) {
 export function createDecryptionAuthorization(value) {
   return Object.freeze({
     id: value.id ?? randomUUID(),
-    requestId: requiredString(value.requestId, 'requestId'),
+    requestId: requiredString(value.requestId ?? value.confidentialJobId, 'requestId'),
+    confidentialJobId: requiredString(value.confidentialJobId ?? value.requestId, 'confidentialJobId'),
     verificationId: requiredString(value.verificationId, 'verificationId'),
+    authorizationId: requiredString(value.authorizationId, 'authorizationId'),
     granted: Boolean(value.granted),
+    decision: value.granted ? 'GRANT' : 'DENY',
     auditRef: requiredString(value.auditRef, 'auditRef'),
     actorRef: requiredString(value.actorRef, 'actorRef'),
     reasonCode: value.reasonCode ?? null,

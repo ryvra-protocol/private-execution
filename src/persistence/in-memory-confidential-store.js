@@ -33,27 +33,27 @@ export class InMemoryConfidentialStore {
   }
 
   saveResult(result) {
-    this.results.set(result.requestId, result);
+    this.results.set(result.confidentialJobId, result);
     return result;
   }
 
   saveVerification(record) {
-    if (this.verifications.has(record.requestId)) {
+    if (this.verifications.has(record.confidentialJobId)) {
       throw new Error('Verification records are immutable');
     }
 
-    this.verifications.set(record.requestId, record);
+    this.verifications.set(record.confidentialJobId, record);
     return record;
   }
 
   saveDecryptionAuthorization(record) {
-    this.decryptionAuthorizations.set(record.requestId, record);
+    this.decryptionAuthorizations.set(record.confidentialJobId, record);
     return record;
   }
 
   saveProviderAttestation(record) {
-    this.providerAttestations.set(record.requestId, Object.freeze({ createdAt: nowIso(), ...record }));
-    return this.providerAttestations.get(record.requestId);
+    this.providerAttestations.set(record.confidentialJobId, Object.freeze({ createdAt: nowIso(), ...record }));
+    return this.providerAttestations.get(record.confidentialJobId);
   }
 
   getIntent(intentId) {
