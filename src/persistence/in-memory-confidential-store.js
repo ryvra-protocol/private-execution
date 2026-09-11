@@ -69,8 +69,9 @@ export class InMemoryConfidentialStore {
       throw new Error('Verification records are immutable');
     }
 
-    this.verifications.set(record.confidentialJobId, record);
-    return record;
+    const persisted = Object.freeze({ createdAt: record.createdAt ?? nowIso(), ...record });
+    this.verifications.set(record.confidentialJobId, persisted);
+    return persisted;
   }
 
   saveDecryptionAuthorization(record) {
@@ -78,8 +79,9 @@ export class InMemoryConfidentialStore {
       throw new Error('Decryption authorizations are immutable');
     }
 
-    this.decryptionAuthorizations.set(record.confidentialJobId, record);
-    return record;
+    const persisted = Object.freeze({ createdAt: record.createdAt ?? nowIso(), ...record });
+    this.decryptionAuthorizations.set(record.confidentialJobId, persisted);
+    return persisted;
   }
 
   saveProviderAttestation(record) {

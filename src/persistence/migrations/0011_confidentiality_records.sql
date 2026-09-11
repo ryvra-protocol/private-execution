@@ -27,6 +27,7 @@ CREATE TABLE confidential_inputs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX idx_confidential_inputs_confidential_job_id ON confidential_inputs (confidential_job_id);
 CREATE INDEX idx_confidential_inputs_created_at ON confidential_inputs (created_at);
 
 CREATE TABLE confidential_results (
@@ -54,6 +55,7 @@ CREATE TABLE provider_attestations (
 );
 
 CREATE INDEX idx_provider_attestations_provider ON provider_attestations (provider);
+CREATE INDEX idx_provider_attestations_confidential_job_id ON provider_attestations (confidential_job_id);
 CREATE INDEX idx_provider_attestations_created_at ON provider_attestations (created_at);
 
 CREATE TABLE verification_records (
@@ -68,6 +70,7 @@ CREATE TABLE verification_records (
   reason TEXT NOT NULL,
   policy_version TEXT NOT NULL,
   policy_hash TEXT NOT NULL,
+  verifier TEXT NOT NULL,
   verifier_actor_ref TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (confidential_job_id)
@@ -92,4 +95,5 @@ CREATE TABLE decrypt_authorizations (
 );
 
 CREATE INDEX idx_decrypt_authorizations_authorization_id ON decrypt_authorizations (authorization_id);
+CREATE INDEX idx_decrypt_authorizations_verification_record_id ON decrypt_authorizations (verification_record_id);
 CREATE INDEX idx_decrypt_authorizations_created_at ON decrypt_authorizations (created_at);

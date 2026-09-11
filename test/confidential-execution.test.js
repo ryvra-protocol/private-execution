@@ -95,6 +95,19 @@ test('missing policy fails closed during verification', async () => {
   );
 });
 
+test('unknown request fails closed during verification', async () => {
+  const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
+
+  await assert.rejects(
+    () => service.verifyConfidentialResult({
+      requestId: 'missing-request',
+      policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
+      actorRef: 'actor:verifier'
+    }),
+    (error) => error.code === FailureReasonCode.UNKNOWN_REQUEST
+  );
+});
+
 test('missing linkage fails closed', async () => {
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
 

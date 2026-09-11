@@ -42,6 +42,11 @@ function validatePolicy(policy) {
   return policy;
 }
 
+function sanitizeRequestForPersistence(request) {
+  const { payload, ...persistedRequest } = request;
+  return Object.freeze(persistedRequest);
+}
+
 export class ConfidentialExecutionService {
   constructor({ providers, store, logger = new MemoryLogger(), keyManager = new NoopExternalKeyManager() }) {
     this.providers = new Map(Object.entries(providers ?? {}));
@@ -102,7 +107,7 @@ export class ConfidentialExecutionService {
     });
 
     this.store.saveExecution({
-      request,
+      request: sanitizeRequestForPersistence(request),
       job: {
         id: request.id,
         intentId: request.intentId,
@@ -143,7 +148,6 @@ export class ConfidentialExecutionService {
   async verifyConfidentialResult({ requestId, policy, actorRef }) {
     const request = this.store.getRequest(requestId);
     const result = this.store.getResult(requestId);
-    const validatedPolicy = validatePolicy(policy);
 
     if (!request || !result) {
       const error = new Error(`Unknown request: ${requestId}`);
@@ -151,6 +155,7 @@ export class ConfidentialExecutionService {
       throw error;
     }
 
+    const validatedPolicy = validatePolicy(policy);
     verifyAuthorityLinkage(request);
     if (validatedPolicy.policyHash !== request.policyHash || validatedPolicy.policyVersion !== request.policyVersion) {
       const verification = createVerificationResult({
