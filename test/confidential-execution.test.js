@@ -85,6 +85,16 @@ test('verification failure blocks decryption', async () => {
   await assert.rejects(() => service.performDecryption({ requestId: result.requestId }), (error) => error.code === FailureReasonCode.DECRYPT_NOT_AUTHORIZED);
 });
 
+test('missing policy fails closed during verification', async () => {
+  const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
+  const result = await service.executeConfidentialCompute(buildRequest());
+
+  await assert.rejects(
+    () => service.verifyConfidentialResult({ requestId: result.requestId, actorRef: 'actor:verifier' }),
+    (error) => error.code === FailureReasonCode.INVALID_POLICY
+  );
+});
+
 test('missing linkage fails closed', async () => {
   const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
 

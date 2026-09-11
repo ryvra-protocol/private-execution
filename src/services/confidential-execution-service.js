@@ -26,6 +26,22 @@ function verifyAuthorityLinkage(linkage) {
   }
 }
 
+function validatePolicy(policy) {
+  if (
+    !policy ||
+    typeof policy.policyVersion !== 'string' ||
+    policy.policyVersion.trim() === '' ||
+    typeof policy.policyHash !== 'string' ||
+    policy.policyHash.trim() === ''
+  ) {
+    const error = new Error('Policy binding is required for verification');
+    error.code = FailureReasonCode.INVALID_POLICY;
+    throw error;
+  }
+
+  return policy;
+}
+
 export class ConfidentialExecutionService {
   constructor({ providers, store, logger = new MemoryLogger(), keyManager = new NoopExternalKeyManager() }) {
     this.providers = new Map(Object.entries(providers ?? {}));
@@ -126,6 +142,7 @@ export class ConfidentialExecutionService {
   async verifyConfidentialResult({ requestId, policy, actorRef }) {
     const request = this.store.getRequest(requestId);
     const result = this.store.getResult(requestId);
+    const validatedPolicy = validatePolicy(policy);
 
     if (!request || !result) {
       const error = new Error(`Unknown request: ${requestId}`);
@@ -134,7 +151,7 @@ export class ConfidentialExecutionService {
     }
 
     verifyAuthorityLinkage(request);
-    if (policy.policyHash !== request.policyHash || policy.policyVersion !== request.policyVersion) {
+    if (validatedPolicy.policyHash !== request.policyHash || validatedPolicy.policyVersion !== request.policyVersion) {
       const verification = createVerificationResult({
         confidentialJobId: requestId,
         requestId,
@@ -145,8 +162,8 @@ export class ConfidentialExecutionService {
         commitmentHash: result.commitmentHash,
         proofRef: result.proofRef,
         attestationRef: result.attestationRef,
-        policyVersion: policy.policyVersion,
-        policyHash: policy.policyHash,
+        policyVersion: validatedPolicy.policyVersion,
+        policyHash: validatedPolicy.policyHash,
         verifier: 'service',
         actorRef
       });
@@ -159,7 +176,7 @@ export class ConfidentialExecutionService {
     const providerResult = await provider.verify(
       result.commitmentHash,
       { proofRef: result.proofRef, attestationRef: result.attestationRef, policyHash: request.policyHash, policyVersion: request.policyVersion },
-      policy
+      validatedPolicy
     );
 
     const verification = createVerificationResult({
@@ -172,8 +189,8 @@ export class ConfidentialExecutionService {
       commitmentHash: result.commitmentHash,
       proofRef: result.proofRef,
       attestationRef: result.attestationRef,
-      policyVersion: policy.policyVersion,
-      policyHash: policy.policyHash,
+      policyVersion: validatedPolicy.policyVersion,
+      policyHash: validatedPolicy.policyHash,
       verifier: 'service',
       actorRef
     });

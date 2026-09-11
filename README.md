@@ -16,12 +16,12 @@ Core Ryvra financial logic integrates with a neutral `ConfidentialExecutionServi
 
 ## Adapter model and current support
 
-| Provider | Status | Notes |
-| --- | --- | --- |
-| Inco | Stub adapter | Stable interface boundary, deterministic mock behavior |
-| Arcium | Stub adapter | Stable interface boundary, deterministic mock behavior |
-| ZK-based provider | Stub adapter | Proof-oriented normalized verification path |
-| TEE-based provider | Stub adapter | Attestation-oriented normalized verification path |
+Provider | Status | Notes
+--- | --- | ---
+Inco | Stub adapter | Stable interface boundary, deterministic mock behavior
+Arcium | Stub adapter | Stable interface boundary, deterministic mock behavior
+ZK-based provider | Stub adapter | Proof-oriented normalized verification path
+TEE-based provider | Stub adapter | Attestation-oriented normalized verification path
 
 ## Security constraints
 

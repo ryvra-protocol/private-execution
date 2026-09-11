@@ -32,7 +32,11 @@ CREATE INDEX idx_confidential_inputs_created_at ON confidential_inputs (created_
 CREATE TABLE confidential_results (
   id TEXT PRIMARY KEY,
   confidential_job_id TEXT NOT NULL REFERENCES confidential_jobs(id),
+  provider TEXT NOT NULL,
+  provider_job_ref TEXT NOT NULL,
   commitment_hash TEXT NOT NULL,
+  proof_ref TEXT NOT NULL,
+  attestation_ref TEXT NOT NULL,
   result_ciphertext_ref TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -77,6 +81,7 @@ CREATE TABLE decrypt_authorizations (
   authorization_id TEXT NOT NULL,
   verification_record_id TEXT NOT NULL REFERENCES verification_records(id),
   decision TEXT NOT NULL,
+  granted BOOLEAN NOT NULL,
   reason_code TEXT,
   reason TEXT NOT NULL,
   audit_ref TEXT NOT NULL,
