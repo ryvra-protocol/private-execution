@@ -194,3 +194,19 @@ test('decryption requires verification record and authorization', async () => {
     (error) => error.code === FailureReasonCode.DECRYPT_NOT_AUTHORIZED
   );
 });
+
+test('decryption requires authorization even after verification succeeds', async () => {
+  const service = new ConfidentialExecutionService({ providers: buildProviders(), store: new InMemoryConfidentialStore() });
+  const result = await service.executeConfidentialCompute(buildRequest('tee', { correlationId: 'corr-auth-gap' }));
+
+  await service.verifyConfidentialResult({
+    requestId: result.requestId,
+    policy: { policyVersion: '2026-09-11', policyHash: 'policy-hash-1' },
+    actorRef: 'actor:verifier'
+  });
+
+  await assert.rejects(
+    () => service.performDecryption({ requestId: result.requestId }),
+    (error) => error.code === FailureReasonCode.DECRYPT_NOT_AUTHORIZED
+  );
+});

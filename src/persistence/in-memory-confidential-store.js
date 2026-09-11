@@ -22,6 +22,33 @@ export class InMemoryConfidentialStore {
     return request;
   }
 
+  saveExecution(records) {
+    const { request, job, input, attestation, result } = records;
+    if (this.requests.has(request.id) || this.jobs.has(job.id) || this.results.has(result.confidentialJobId)) {
+      throw new Error('Execution records are immutable');
+    }
+
+    const nextRequests = new Map(this.requests);
+    const nextJobs = new Map(this.jobs);
+    const nextInputs = new Map(this.inputs);
+    const nextAttestations = new Map(this.providerAttestations);
+    const nextResults = new Map(this.results);
+
+    nextRequests.set(request.id, request);
+    nextJobs.set(job.id, Object.freeze({ createdAt: nowIso(), ...job }));
+    nextInputs.set(input.id, Object.freeze({ createdAt: nowIso(), ...input }));
+    nextAttestations.set(attestation.confidentialJobId, Object.freeze({ createdAt: nowIso(), ...attestation }));
+    nextResults.set(result.confidentialJobId, result);
+
+    this.requests = nextRequests;
+    this.jobs = nextJobs;
+    this.inputs = nextInputs;
+    this.providerAttestations = nextAttestations;
+    this.results = nextResults;
+
+    return result;
+  }
+
   saveInput(inputRecord) {
     this.inputs.set(inputRecord.id, Object.freeze({ createdAt: nowIso(), ...inputRecord }));
     return this.inputs.get(inputRecord.id);

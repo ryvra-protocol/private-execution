@@ -9,7 +9,7 @@ import {
   validateAuthorityLinkage
 } from '../models.js';
 import { assertProviderContract } from '../provider.js';
-import { MemoryLogger } from '../security/redaction.js';
+import { MemoryLogger, sensitive } from '../security/redaction.js';
 import { NoopExternalKeyManager } from '../security/key-manager.js';
 
 function linkageError(reason) {
@@ -89,33 +89,6 @@ export class ConfidentialExecutionService {
       metadata: request.metadata
     });
 
-    this.store.saveRequest(request);
-    this.store.saveJob({
-      id: request.id,
-      intentId: request.intentId,
-      mandateId: request.mandateId,
-      authorizationId: request.authorizationId,
-      correlationId: request.correlationId,
-      provider: request.provider,
-      providerJobRef: computed.jobRef,
-      operation: request.operation,
-      status: ExecutionStatus.EXECUTED
-    });
-    this.store.saveInput({
-      id: randomUUID(),
-      confidentialJobId: request.id,
-      inputRef: request.inputRef,
-      ciphertextRef: encrypted.ciphertext,
-      inputHash: encrypted.metadata.inputHash
-    });
-    this.store.saveProviderAttestation({
-      id: randomUUID(),
-      confidentialJobId: request.id,
-      provider: request.provider,
-      proofRef: computed.proofRef,
-      attestationRef: computed.attestationRef
-    });
-
     const result = createConfidentialExecutionResult({
       confidentialJobId: request.id,
       requestId: request.id,
@@ -128,11 +101,39 @@ export class ConfidentialExecutionService {
       metadata: { status: ExecutionStatus.EXECUTED }
     });
 
-    this.store.saveResult(result);
+    this.store.saveExecution({
+      request,
+      job: {
+        id: request.id,
+        intentId: request.intentId,
+        mandateId: request.mandateId,
+        authorizationId: request.authorizationId,
+        correlationId: request.correlationId,
+        provider: request.provider,
+        providerJobRef: computed.jobRef,
+        operation: request.operation,
+        status: ExecutionStatus.EXECUTED
+      },
+      input: {
+        id: randomUUID(),
+        confidentialJobId: request.id,
+        inputRef: request.inputRef,
+        ciphertextRef: encrypted.ciphertext,
+        inputHash: encrypted.metadata.inputHash
+      },
+      attestation: {
+        id: randomUUID(),
+        confidentialJobId: request.id,
+        provider: request.provider,
+        proofRef: computed.proofRef,
+        attestationRef: computed.attestationRef
+      },
+      result
+    });
     this.logger.info('confidential.compute.executed', {
       requestId: request.id,
       provider: request.provider,
-      payload: request.payload,
+      payload: sensitive(request.payload),
       commitmentHash: result.commitmentHash
     });
 
@@ -275,7 +276,7 @@ export class ConfidentialExecutionService {
     this.logger.info('confidential.decrypt.performed', {
       requestId,
       provider: request.provider,
-      plaintext,
+      plaintext: sensitive(plaintext),
       requiredAuthorityFields: REQUIRED_AUTHORITY_FIELDS
     });
     return plaintext;

@@ -38,7 +38,8 @@ CREATE TABLE confidential_results (
   proof_ref TEXT NOT NULL,
   attestation_ref TEXT NOT NULL,
   result_ciphertext_ref TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (confidential_job_id)
 );
 
 CREATE INDEX idx_confidential_results_created_at ON confidential_results (created_at);
