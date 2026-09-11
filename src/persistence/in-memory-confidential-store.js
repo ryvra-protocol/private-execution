@@ -47,6 +47,10 @@ export class InMemoryConfidentialStore {
   }
 
   saveDecryptionAuthorization(record) {
+    if (this.decryptionAuthorizations.has(record.confidentialJobId)) {
+      throw new Error('Decryption authorizations are immutable');
+    }
+
     this.decryptionAuthorizations.set(record.confidentialJobId, record);
     return record;
   }

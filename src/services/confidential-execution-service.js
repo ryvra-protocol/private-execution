@@ -74,13 +74,6 @@ export class ConfidentialExecutionService {
     });
 
     this.store.saveRequest(request);
-    this.store.saveInput({
-      id: randomUUID(),
-      confidentialJobId: request.id,
-      inputRef: request.inputRef,
-      ciphertextRef: encrypted.ciphertext,
-      inputHash: encrypted.metadata.inputHash
-    });
     this.store.saveJob({
       id: request.id,
       intentId: request.intentId,
@@ -91,6 +84,13 @@ export class ConfidentialExecutionService {
       providerJobRef: computed.jobRef,
       operation: request.operation,
       status: ExecutionStatus.EXECUTED
+    });
+    this.store.saveInput({
+      id: randomUUID(),
+      confidentialJobId: request.id,
+      inputRef: request.inputRef,
+      ciphertextRef: encrypted.ciphertext,
+      inputHash: encrypted.metadata.inputHash
     });
     this.store.saveProviderAttestation({
       id: randomUUID(),
@@ -151,6 +151,7 @@ export class ConfidentialExecutionService {
         actorRef
       });
       this.store.saveVerification(verification);
+      this.logger.info('confidential.result.verified', verification);
       return verification;
     }
 
